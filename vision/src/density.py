@@ -75,7 +75,6 @@ class frank:
         flag = Bool()
         flag.data = False
 
-        # density = [self.den_Red, self.den_Yel, self.den_Mag, self.den_Ora, self.den_Blu, self.den_Gre]
         density = [self.den_Ora, self.den_Blu, self.den_Gre, self.den_Red, self.den_Yel, self.den_Mag]
 
         if np.max(density) >= 0.2:
