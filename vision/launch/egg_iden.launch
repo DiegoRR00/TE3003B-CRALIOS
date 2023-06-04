@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <node name="egg_iden" pkg="egg_iden" type="egg_iden.py"/>
+    <node name="density_calc" pkg="egg_iden" type="density.py"/>
+</launch>
