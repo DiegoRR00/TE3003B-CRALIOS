@@ -1,0 +1,11 @@
+ Program
+   Variables Setup
+   Robot Program
+     MoveJ
+       home
+       RG6(90)
+     MoveJ
+       Waypoint_1
+       RG6(32)
+     MoveJ
+       Waypoint_2

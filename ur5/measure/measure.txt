@@ -1,0 +1,23 @@
+ Program
+   Variables Setup
+   Robot Program
+     MoveJ
+       Waypoint_1
+       RG6(42)
+     MoveL
+       Waypoint_2
+     Force
+       Wait ForceYTool<1
+       Touch1≔get_actual_tcp_pose()
+       lenght1≔(100*Touch1[1])-cal_clavo
+     MoveL
+       Waypoint_3
+       Waypoint_4
+     Force
+       Wait ForceYTool>1
+       Touch2≔get_actual_tcp_pose()
+       length2≔(100*Touch1[1])-cal_clavo
+   Thread_1
+     ToolForce≔get_tcp_force()
+     ForceYTool≔ToolForce[1]
+     Wait: 0.01

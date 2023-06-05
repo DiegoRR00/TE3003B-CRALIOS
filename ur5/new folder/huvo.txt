@@ -1,0 +1,35 @@
+ Program
+   Variables Setup
+   Robot Program
+     MoveJ
+       Waypoint_15
+     MoveJ
+       RG6(0)
+       Waypoint_1
+     MoveJ
+       Waypoint_3
+     MoveJ
+       Waypoint_4
+     MoveJ
+       Waypoint_5
+     MoveJ
+       Waypoint_6
+     MoveJ
+       Waypoint_7
+     MoveJ
+       Waypoint_8
+       Waypoint_9
+     MoveJ
+       Waypoint_10
+     RG6(121)
+     MoveJ
+       Waypoint_11
+     RG6(101)
+     MoveJ
+       Waypoint_13
+     MoveJ
+       Waypoint_12
+       Waypoint_14
+     RG6(121)
+     MoveJ
+       Waypoint_15

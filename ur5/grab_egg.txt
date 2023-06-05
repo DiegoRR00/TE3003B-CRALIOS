@@ -1,0 +1,18 @@
+ Program
+   Variables Setup
+   Robot Program
+     init≔0
+     MoveJ
+       home
+     Sub. /my_topic/int
+     Switch init
+       Case 1
+         MoveJ
+           huevo1
+           huevo11≔huevo1
+       Case 2
+         MoveJ
+           inter
+           agarrar
+     Wait: 1.0
+     Pub. /my_topic/string

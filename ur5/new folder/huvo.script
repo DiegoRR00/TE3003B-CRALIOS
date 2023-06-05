@@ -1,0 +1,724 @@
+def huvo():
+  global _hidden_verificationVariable=0
+  step_count_92811ec8_4ce7_429c_87b3_56626d53722d = 0.0
+  thread Step_Counter_Thread_a5297b54_5d25_43fd_a8f6_e0a7e3f18389():
+    while (True):
+      step_count_92811ec8_4ce7_429c_87b3_56626d53722d = step_count_92811ec8_4ce7_429c_87b3_56626d53722d + 1.0
+      sync()
+    end
+  end
+  run Step_Counter_Thread_a5297b54_5d25_43fd_a8f6_e0a7e3f18389()
+  set_gravity([0.0, 0.0, 9.82])
+  set_tcp(p[0.0,4.0E-4,0.26,0.0,0.0,0.0])
+  set_tool_communication(False, 115200, 0, 1, 1.5, 3.5)
+  set_tool_output_mode(0)
+  set_tool_digital_output_mode(0, 1)
+  set_tool_digital_output_mode(1, 1)
+  set_tool_voltage(0)
+  set_safety_mode_transition_hardness(1)
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_target_payload(1.240000, [-0.053000, 0.000000, 0.034000], [0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000])
+  global cal_clavo=-705.5
+  # begin: URCap Installation Node
+  #   Source: Cognex In-Sight Robot Guidance, 1.3.1, Cognex Corporation
+  #   Type: Cognex
+  stringRPC = rpc_factory("xmlrpc","http://127.0.0.1:33004")
+  socket_open("192.168.0.100", 3105, "CGNX_SOCKET")
+  # end: URCap Installation Node
+  # begin: URCap Installation Node
+  #   Source: External Control, 1.0.5, FZI Research Center for Information Technology
+  #   Type: External Control
+  # end: URCap Installation Node
+  # begin: URCap Installation Node
+  #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+  #   Type: RG Configuration
+  set_tool_output_mode(0)
+  set_tool_digital_output_mode(0,1)
+  set_tool_digital_output_mode(1,1)
+  global measure_width=0
+  global grip_detected=False
+  global lost_grip=False
+  global zsysx=0
+  global zsysy=0
+  global zsysz=0.10205
+  global zsysm=1.085
+  global zmasx=0
+  global zmasy=0
+  global zmasz=0.23434
+  global zslax=0
+  global zslay=0
+  global zslaz=0
+  global zmasm=0
+  global zslam=0
+  global zslatcp=p[0,0,0,0,0,0]
+  global zmastcp=p[0,0,0.23435,0,-0,-3.14159]
+  thread lost_grip_thread():
+  while True:
+  set_tool_voltage(24)
+  	if True ==get_digital_in(9):
+  		sleep(0.024)
+  		if True == grip_detected:
+  			if False == get_digital_in(8):
+  				grip_detected=False
+  				lost_grip=True
+  			end
+  		end
+  	set_tool_analog_input_domain(0, 1)
+  	set_tool_analog_input_domain(1, 1)
+  	zscale = (get_analog_in(2)-0.026)/2.5900013
+  	zangle = zscale*1.57079633+-0.09424778
+  	zwidth = 8.4+160*sin(zangle)
+  	global measure_width = (floor(zwidth*10))/10-9.2
+  	end
+  	sync()
+  end
+  end
+  lg_thr = run lost_grip_thread()
+  def RG6(target_width=160, target_force=120, payload=0.0, set_payload=False, depth_compensation=False, slave=False):
+  	set_tcp(p[0,0,0.23435,0,-0,-3.14159])
+  	grip_detected=False
+  	if slave:
+  		slave_grip_detected=False
+  	else:
+  		master_grip_detected=False
+  	end
+  	timeout = 0
+  	timeout_limit = 5000000
+  	while get_digital_in(9) == False:
+  	  if timeout > timeout_limit:
+  	    break
+  	  end
+  	  timeout = timeout+1
+  	  sync()
+  	end
+  	def bit(input):
+  	  msb=65536
+  	  local i=0
+  	  local output=0
+  	  while i<17:
+  	    set_digital_out(8,True)
+  	    if input>=msb:
+  	      input=input-msb
+  	      set_digital_out(9,False)
+  	    else:
+  	      set_digital_out(9,True)
+  	    end
+  	    if get_digital_in(8):
+  	      out=1
+  	    end
+  	    sync()
+  	    set_digital_out(8,False)
+  	    sync()
+  	    input=input*2
+  	    output=output*2
+  	    i=i+1
+  	  end
+  	  return output
+  	end
+  	target_width=target_width+9.2
+  	if target_force>120:
+  	target_force=120
+  	end
+  	if target_force<25:
+  	target_force=25
+  	end
+  	if target_width>160:
+  	target_width=160
+  	end
+  	if target_width<0:
+  	target_width=0
+  	end
+  	rg_data=floor(target_width)*4
+  	rg_data=rg_data+floor(target_force/5)*4*161
+  	rg_data=rg_data+32768
+  	if slave:
+  	rg_data=rg_data+16384
+  	end
+  	bit(rg_data)
+  	if slave==False:
+  	t_w_rg=pose_trans(get_actual_tool_flange_pose(), zmastcp)
+  	end
+  	if slave:
+  	t_w_rg=pose_trans(get_actual_tool_flange_pose(), zslatcp)
+  	end
+  	t_rg_w=pose_inv(t_w_rg)
+  	if depth_compensation:
+  	finger_length = 80.0/1000
+  	finger_heigth_disp = 6.3/1000
+  	center_displacement = 10.5/1000
+  
+  	start_pose = get_forward_kin()
+  	set_analog_inputrange(2, 1)
+  	zscale = (get_analog_in(2)-0.026)/2.5900013
+  	zangle = zscale*1.57079633+-0.09424778
+  	zwidth = 8.4+160*sin(zangle)
+  
+  	start_depth = cos(zangle)*finger_length
+  
+  	sleep(0.016)
+  	timeout = 0
+  	while get_digital_in(9) == True:
+  	  timeout=timeout+1
+  	  sleep(0.008)
+  	  if timeout > 20:
+  	    break
+  	  end
+  	end
+  	timeout = 0
+  	timeout_limit = 1250000
+  	compensation_depth = 0
+  	while get_digital_in(9) == False:
+  	  zscale = (get_analog_in(2)-0.026)/2.5900013
+  	  zangle = zscale*1.57079633+-0.09424778
+  	  zwidth = 8.4+160*sin(zangle)
+  	  measure_depth = cos(zangle)*finger_length
+  	  compensation_depth = (measure_depth - start_depth)
+  	  target_pose =pose_add(start_pose,pose_trans(pose_trans(t_w_rg, p[0,0,-compensation_depth,0,0,0]),t_rg_w))
+  
+  	  if timeout > timeout_limit:
+  	    break
+  	  end
+  	  timeout=timeout+1
+  	#  servoj(get_inverse_kin(target_pose), t=0.008, lookahead_time=0.033, gain=1500)
+  	#  textmsg(point_dist(target_pose, get_forward_kin()))
+  	#end
+  	#textmsg("end gripper move!!!!!")
+  	#nspeedthr = 0.001
+  	#nspeed = norm(get_actual_tcp_speed())
+  	#while nspeed > nspeedthr:
+  	#  servoj(get_inverse_kin(target_pose), t=0.008, lookahead_time=0.033, gain=1500)
+  	#  nspeed = norm(get_actual_tcp_speed())
+  	#  textmsg(point_dist(target_pose, get_forward_kin()))
+  	#end
+  	servoj(get_inverse_kin(target_pose),0,0,0.008,0.01,2000)
+  	if point_dist(target_pose, get_forward_kin()) > 0.005:
+  	popup("Lower grasping force or max width",title="RG-lag threshold exceeded", warning=False, error=False, blocking=False)
+  	end
+  	end
+  	act_comp_pose = p[0,0,0,0,0,0]
+  	while norm(act_comp_pose) < norm(compensation_depth)-0.0002:
+  	servoj(get_inverse_kin(target_pose),0,0,0.008,0.01,2000)
+  	act_comp_pose = pose_trans(pose_inv(start_pose),get_forward_kin())
+  	end
+  	stopj(2)
+  	end
+  	if depth_compensation==False:
+  	timeout = 0
+  	timeout_count=20*0.008/0.002
+  	while get_digital_in(9) == True:
+  	  timeout = timeout+1
+  	  sync()
+  	  if timeout > timeout_count:
+  	    break
+  	  end
+  	end
+  	timeout = 0
+  	timeout_limit = 5000000
+  	while get_digital_in(9) == False:
+  	  timeout = timeout+1
+  	  sync()
+  	  if timeout > timeout_limit:
+  	    break
+  	  end
+  	end
+  	end
+  	sleep(0.024)
+  	if set_payload:
+  	if slave:
+  	if get_analog_in(3)/0.5180003 < 1.42:
+  	zslam=0
+  	else:
+  	zslam=payload
+  	end
+  	else:
+  	if get_digital_in(8) == False:
+  	zmasm=0
+  	else:
+  	zmasm=payload
+  	end
+  	end
+  	zload=zmasm+zslam+zsysm
+  	set_payload(zload,[(zsysx*zsysm+zmasx*zmasm+zslax*zslam)/zload,(zsysy*zsysm+zmasy*zmasm+zslay*zslam)/zload,(zsysz*zsysm+zmasz*zmasm+zslaz*zslam)/zload])
+  	end
+  	master_grip_detected=False
+  	master_lost_grip=False
+  	slave_grip_detected=False
+  	slave_lost_grip=False
+  	if True == get_digital_in(8):
+  		master_grip_detected=True
+  	end
+  	if get_analog_in(3)/0.5180003>1.97:
+  		slave_grip_detected=True
+  	end
+  	grip_detected=False
+  	lost_grip=False
+  	if True == get_digital_in(8):
+  		grip_detected=True
+  	end
+  	zscale = (get_analog_in(2)-0.026)/2.5900013
+  	zangle = zscale*1.57079633+-0.09424778
+  	zwidth = 8.4+160*sin(zangle)
+  	global measure_width = (floor(zwidth*10))/10-9.2
+  	if slave:
+  	slave_measure_width=measure_width
+  	else:
+  	master_measure_width=measure_width
+  	end
+  	return grip_detected
+  end
+  set_tool_voltage(24)
+  set_tcp(p[0,0,0.23435,0,-0,-3.14159])
+  # end: URCap Installation Node
+  # begin: URCap Installation Node
+  #   Source: ros_as_a_service, 0.2.0, FZI Research Center for Information Technology
+  #   Type: Rosbridge adapter
+  # buffer for char quote as we can not put this explicitly in UR Script
+  quote = " "
+  
+  ### bool json_checkKeywordMatch(src="", target="", index=1)
+  ### check if a given name in src is a valid identifier
+  ### This is checked by testing for a prepositioned and a postpositioned quote + colcon
+  ### src: string in which to check if a target is a valid identifier
+  ### target: identifier key
+  ### index: position of first character of target in src, min value = 1
+  def json_checkKeywordMatch(src="", target="", index=1):
+    # check strings not empty
+    if (str_empty(target)):
+      textmsg("target empty!")
+      return False
+    end
+    if (str_empty(src)):
+      textmsg("src empty!")
+      return False
+    end
+    
+    # determin string lengths
+    src_length = str_len(src)
+    tgt_length = str_len(target)
+    
+    # check index in valid range
+    if (index <= 0):
+      textmsg("index to low!", index)
+      return False
+    end
+    if (index + tgt_length + 1 > src_length):
+      textmsg("index to high!", index)
+      return False
+    end
+    if (index >= 2 and str_at(src, index-2) == "\"):
+      textmsg("keyword is not valid due to escape sequence")
+      return False
+    end
+    if (index > 0 and str_at(src,index-1) != quote):
+      textmsg("keyword not headed by a quote!")
+      return False
+    end
+    if (str_at(src, index + tgt_length) != quote):
+      textmsg("keyword not followed by a quote!")
+      return False
+    end
+    if (str_at(src, index + tgt_length + 1) != ":"):
+      textmsg("keyword not followed by a colcon!")
+      return False
+    end
+  
+    return True
+  end
+  
+  ### int json_strFindFirstNotOf(src, target, start = 0)
+  ### find first character in src that is not in target
+  ### src: string in which to look for characters
+  ### target: string with allowed characters
+  ### start: first character to check in src
+  ### return position of first character not in target. if none is found return -1
+  def json_strFindFirstNotOf(src, target, start = 0):
+    position = start
+    while (position < str_len(src)):
+      a = str_at(src, position)
+      if (str_find(target, a) == -1):
+        return position
+      end
+      position = position + 1
+    end
+    return -1
+  end
+  
+  ### int json_findCorrespondingClosingContainer(src, open_sign, closing_sign, start=1)
+  ### with a defined character to open a container and one to close it look for the end of the container
+  ### src: string where to look for delimiters
+  ### open_sign: character to open a container
+  ### closing_sign: character to close a container
+  ### start: first character to check in src
+  ### return position of closing character in src. -1 if none is found
+  def json_findCorrespondingClosingContainer(src="", open_sign=" ", closing_sign=" ", start=1):
+    # textmsg("look for Closing Container. start: ", start)
+    # textmsg("opening: ", open_sign)
+    # textmsg("closing: ", closing_sign)
+    if (open_sign == quote):
+      position = start +1
+    else:
+      position = start
+    end
+    brace_count = 0
+    
+    while position < str_len(src):
+      if (str_at(src, position) == open_sign):
+        if(position == 0):
+          # textmsg("found an opening at ", position)
+          brace_count = brace_count + 1
+        elif (str_at(src, position -1) != "\"):
+          # textmsg("found an opening at ", position)
+          brace_count = brace_count + 1
+        end
+      end
+      
+      if (str_at(src, position) == closing_sign):
+        if (position == 0):
+          textmsg("start is closing delimiter!")
+          return 0
+        elif (str_at(src, position -1) != "\"):
+          # textmsg("found a closing at ", position)
+          brace_count = brace_count - 1
+        end
+        if (brace_count == 0):
+          # textmsg("found closing for the container at ", position)
+          return position
+        end
+      end
+      
+      position = position + 1
+    end
+    
+    textmsg("no closing container found for opening at ", start)
+    return -1
+  end
+  
+  ### int json_findCorrespondingDelimiter(src, start = 0)
+  ### Look for a following corresponding Delimiter in a Json string.
+  ### src: json string to evaluate
+  ### start: position of delimiter to look for a corresponding element
+  ### return: position of character closing the container
+  def json_findCorrespondingDelimiter(src, start = 0):
+    # textmsg("find corresponding delimiter. start ", start)
+    if (str_empty(src) == True):
+      textmsg("Cannot find a corresponding delimiter in empty string")
+      return -1
+    end
+    
+    local length = str_len(src)
+    local delimiter_start = str_at(src, start)
+    local delimiter_end = " "
+    
+    if (delimiter_start == quote):
+      delimiter_end = quote
+    elif (delimiter_start == "{"):
+      delimiter_end = "}"
+    elif (delimiter_start == "["):
+      delimiter_end = "]"
+    elif (delimiter_start == "("):
+      delimiter_end = ")"
+    else:
+      # boolean expressions and numbers without quotes
+      position = json_strFindFirstNotOf(src, "truefalsn0123456789.", start +1)
+      return position -1
+    end
+    
+    return json_findCorrespondingClosingContainer(src, delimiter_start, delimiter_end, start)
+  end
+  
+  ### int[4] json_getElement(inp_string, name)
+  ### return positions of an Element in a json string
+  ### inp_string: json to extract the element from
+  ### name: identifier of the element
+  ### return: [pos of quote before identifier, pos of quote after identifier, begin of value, end of value]
+  def json_getElement(inp_string="", name=""):
+    # check inputs not empty
+    if (str_empty(inp_string) == True):
+      textmsg("Can not evaluate empty json string. abort")
+      return [0, 0, 0, 0]
+    end
+    if (str_empty(name) == True):
+      textmsg("Empty json identifier to look for. abort")
+      return [0, 0, 0, 0]
+    end
+  
+    # determine actual length of inputs
+    local inp_length = str_len(inp_string)
+    local name_length = str_len(name)
+  
+    local element_begin = 0
+    local value_begin = 0
+    local element_end = 0
+    local index = 0
+  
+    # search for name and check it is a keyword
+    while (index < inp_length):
+      index = str_find(inp_string, name, element_begin)
+      if (json_checkKeywordMatch(inp_string, name, index) == True):
+        element_begin = index
+        break
+      end
+  
+      # return 0 if no valid identifier was found
+      if (index == -1):
+        return [0, 0, 0, 0]
+      end
+  
+      index = index + 1
+    end
+    
+    # set element_begin to quote before identifier, always valid as otherwise checkKeywordMatch fails
+    element_begin = element_begin - 1
+    
+    # set temporary element_end to end of identifier
+    element_end = element_begin + name_length + 2
+    
+    # search for begin of elements value
+    value_begin = json_strFindFirstNotOf(inp_string, ": ", element_end)
+    
+    # return 0 if no value found
+    if (value_begin == -1):
+      textmsg("did not find begin of value")
+      return [0, 0, 0, 0]
+    end
+    
+    # search end of value
+    element_end = json_findCorrespondingDelimiter(inp_string, value_begin)
+    
+    # return 0 if no valid end of value/element found
+    if (element_end == -1):
+      textmsg("did not find end of element")
+      return [0, 0, 0, 0]
+    end
+    
+    return [element_begin, element_begin + name_length + 1, value_begin, element_end]
+  end
+  
+  ### string json_reduceString(inp_string="", start=0, length=0)
+  ### get the string without a substring defined by start and length
+  ### inp_string: string that shall be reduced
+  ### start: index of first character of substring to be removed
+  ### length: length of substring to be removed
+  ### return: catenated string of residual strings before and behind substring
+  def json_reduceString(inp_string="", start=0, length=0):
+    local prefix = str_sub(inp_string, 0, start)
+    local postfix = str_sub(inp_string, start + length)
+    return str_cat(prefix, postfix)
+  end
+
+  ### string json_removeSurroundingQuotes(inp_string)
+  ### Remove surrounding " signs if present
+  ### return: input string if not the first and last characters are the quote character
+  def json_removeSurroundingQuotes(inp_string=""):
+    local len = str_len(inp_string)
+    if len < 1:
+      textmsg("json_removeSurroundingQuotes: Passed string is empty!")
+      return inp_string
+    end
+    if str_at(inp_string, 0) == quote:
+      if (str_at(inp_string, len - 1)) == quote:
+        return str_sub(inp_string, 1, len - 2)
+      end
+    end
+    return inp_string
+  end
+
+  # get quote for json parsing
+  def rosbridge_get_quote(remoteIP, remotePort):
+  quote_socket_connected = socket_open(remoteIP, remotePort, "quotesocket")
+  if (quote_socket_connected == False):
+    popup("Could not connect to rosbridge at " + remoteIP + ":" + to_str(remotePort) + ". Following ROS calls will not work! Check your connection setup and make sure the rosbridge is actually running.", "Connection failed", error=True, blocking=True)
+  end
+  socket_send_byte(123, "quotesocket")	# {
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(111, "quotesocket")	# o
+  socket_send_byte(112, "quotesocket")	# p
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(58, "quotesocket")	# :
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(99, "quotesocket")	# c
+  socket_send_byte(97, "quotesocket")	# a
+  socket_send_byte(108, "quotesocket")	# l
+  socket_send_byte(108, "quotesocket")	# l
+  socket_send_byte(95, "quotesocket")	# _
+  socket_send_byte(115, "quotesocket")	# s
+  socket_send_byte(101, "quotesocket")	# e
+  socket_send_byte(114, "quotesocket")	# r
+  socket_send_byte(118, "quotesocket")	# v
+  socket_send_byte(105, "quotesocket")	# i
+  socket_send_byte(99, "quotesocket")	# c
+  socket_send_byte(101, "quotesocket")	# e
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(44, "quotesocket")	# ,
+  socket_send_byte(32, "quotesocket")	#
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(115, "quotesocket")	# s
+  socket_send_byte(101, "quotesocket")	# e
+  socket_send_byte(114, "quotesocket")	# r
+  socket_send_byte(118, "quotesocket")	# v
+  socket_send_byte(105, "quotesocket")	# i
+  socket_send_byte(99, "quotesocket")	# c
+  socket_send_byte(101, "quotesocket")	# e
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(58, "quotesocket")	# :
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(47, "quotesocket")	# /
+  socket_send_byte(114, "quotesocket")	# r
+  socket_send_byte(111, "quotesocket")	# o
+  socket_send_byte(115, "quotesocket")	# s
+  socket_send_byte(97, "quotesocket")	# a
+  socket_send_byte(112, "quotesocket")	# p
+  socket_send_byte(105, "quotesocket")	# i
+  socket_send_byte(47, "quotesocket")	# /
+  socket_send_byte(103, "quotesocket")	# g
+  socket_send_byte(101, "quotesocket")	# e
+  socket_send_byte(116, "quotesocket")	# t
+  socket_send_byte(95, "quotesocket")	# _
+  socket_send_byte(116, "quotesocket")	# t
+  socket_send_byte(105, "quotesocket")	# i
+  socket_send_byte(109, "quotesocket")	# m
+  socket_send_byte(101, "quotesocket")	# e
+  socket_send_byte(34, "quotesocket")	# "
+  socket_send_byte(125, "quotesocket")	# }
+  response = socket_read_string("quotesocket")
+  if (str_len(response) > 2):
+    textmsg(response)
+    quote = str_at(response, 1)
+    bounds = json_getElement(inp_string=response, name="result")
+    quote_result = str_sub(response, bounds[2], bounds[3]-bounds[2]+1)
+    if (quote_result != "true"):
+      popup("Parsing quote from rosbridge answer failed! Make sure that the rosbridge is actually running at " + remoteIP + ":" + to_str(remotePort) + ".", "Parsing quote char failed", error=True, blocking=True)
+    end
+  else:
+    popup("Could not receive quote char from rosbridge. Make sure that the rosbridge is actually running at " + remoteIP + ":" + to_str(remotePort) + ".", "Did not receive quote char", error=True, blocking=True)
+  end
+  socket_close("quotesocket")
+  end
+  # Action status to string
+  def goalStateString(state_num):
+  if (state_num == 0):
+    return "PENDING"
+  elif (state_num == 1):
+    return "ACTIVE"
+  elif (state_num == 2):
+    return "PREEMPTED"
+  elif (state_num == 3):
+    return "SUCCEEDED"
+  elif (state_num == 4):
+    return "ABORTED"
+  elif (state_num == 5):
+    return "REJECTED"
+  elif (state_num == 6):
+    return "PREEMPTING"
+  elif (state_num == 7):
+    return "RECALLING"
+  elif (state_num == 8):
+    return "RECALLED"
+  elif (state_num == 9):
+    return "LOST"
+  end
+  end
+  # end: URCap Installation Node
+  global Waypoint_15_p=p[-.409048430408, -.234058716559, .156224063375, -3.134578074854, .040638982925, -.024754602111]
+  global Waypoint_15_q=[0.23274923861026764, -1.6231557331480921, 1.8672454992877405, -1.7981978855528773, -1.5660832563983362, -1.3076918760882776]
+  global Waypoint_1_p=p[-.194320933411, -.379282743090, .091361578647, 3.118222778477, -.018353603667, .111866275738]
+  global Waypoint_1_q=[0.7242708206176758, -1.686350484887594, 2.0955589453326624, -1.9413114986815394, -1.4998486677752894, -0.8310945669757288]
+  global Waypoint_3_p=p[-.212152959767, -.452544114976, .058137309848, 3.091043950316, .150200321219, .022711826374]
+  global Waypoint_3_q=[0.829696536064148, -1.4975265350988884, 2.0227773825274866, -2.1191588840880335, -1.5210116545306605, -0.831064526234762]
+  global Waypoint_4_p=p[-.211726328364, -.452139043413, .057741574942, 2.322502648774, .121274257945, -.027730639720]
+  global Waypoint_4_q=[0.3048798441886902, -1.6633440456786097, 2.6533835569964808, -2.8559934101500453, -0.7926009337054651, -1.2400739828692835]
+  global Waypoint_5_p=p[-.211770560570, -.488771635048, .115788204857, 2.322453363200, .121264380168, -.027864067213]
+  global Waypoint_5_q=[0.42471593618392944, -1.7375394306578578, 2.516709868107931, -2.7509123287596644, -0.8320615927325647, -1.0856226126300257]
+  global Waypoint_6_p=p[-.211762021377, -.619841730669, .115792291926, 2.322414284613, .121293699226, -.027905013057]
+  global Waypoint_6_q=[0.7319967746734619, -1.3986787062934418, 2.2449620405780237, -3.028684278527731, -0.9842703978167933, -0.7433903853045862]
+  global Waypoint_7_p=p[-.212102559139, -.634025875090, .094552424030, 2.320647132047, .122132705440, -.030081092184]
+  global Waypoint_7_q=[0.7560412287712097, -1.3200889986804505, 2.230056111012594, -3.107670923272604, -0.9988616148578089, -0.719827953969137]
+  global Waypoint_8_p=p[-.211754873025, -.633742278909, .141346037013, 2.322402172173, .121363788112, -.027871903871]
+  global Waypoint_8_q=[0.7562346458435059, -1.4234566253474732, 2.185629192982809, -2.957292696038717, -0.9976685682879847, -0.7199414412127894]
+  global Waypoint_9_p=p[-.211754065096, -.633733454423, .141388391828, 3.069537000589, .149466636085, .022309531305]
+  global Waypoint_9_q=[1.0187172889709473, -1.201864854698517, 1.4308269659625452, -1.848537107507223, -1.5144427458392542, -0.6419852415667933]
+  global Waypoint_10_p=p[-.202621841672, -.614990875604, .125868252736, -3.132353322997, -.076047333574, -.043725463711]
+  global Waypoint_10_q=[1.0320194959640503, -1.1872679156116028, 1.4308837095843714, -1.7931062183775843, -1.5454161802874964, -0.5816581884967249]
+  global Waypoint_11_p=p[-.200643737518, -.617386197889, .041552132881, -3.137838659692, -.020510981995, -.054220198519]
+  global Waypoint_11_q=[1.0319281816482544, -1.1185203355601807, 1.5590289274798792, -1.9910766086974085, -1.5374954382525843, -0.5451014677630823]
+  global Waypoint_13_p=p[-.201524345308, -.617750672117, .122586001220, -3.137867897440, -.020513397839, -.054280958247]
+  global Waypoint_13_q=[1.0312010049819946, -1.1821280878833313, 1.4326403776751917, -1.8010317287840785, -1.5368683973895472, -0.5470221678363245]
+  global Waypoint_12_p=p[-.535679975595, -.615176462607, .121395706848, -3.137834620140, -.020419647304, -.054133842094]
+  global Waypoint_12_q=[0.6793166995048523, -0.7134709519198914, 0.6690447966205042, -1.4977148112705727, -1.5475590864764612, -0.8997128645526331]
+  global Waypoint_14_p=p[-.516234939776, -.507727826923, -.561787136212, -3.129612654794, .265633255551, -.054938512978]
+  global Waypoint_14_q=[0.5759028792381287, 0.11516444265332026, 0.9283440748797815, -2.586945196191305, -1.551582161580221, -0.8163912932025355]
+  $ 2 "Robot Program"
+  $ 3 "MoveJ"
+  $ 4 "Waypoint_15" "breakAfter"
+  movej(get_inverse_kin(Waypoint_15_p, qnear=Waypoint_15_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 5 "MoveJ"
+  # begin: URCap Program Node
+  #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+  #   Type: RG6
+  $ 6 "RG6(0)"
+  RG6(0,120,0.0,True,False,False)
+  # end: URCap Program Node
+  $ 7 "Waypoint_1" "breakAfter"
+  movej(get_inverse_kin(Waypoint_1_p, qnear=Waypoint_1_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 8 "MoveJ"
+  $ 9 "Waypoint_3" "breakAfter"
+  movej(get_inverse_kin(Waypoint_3_p, qnear=Waypoint_3_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 10 "MoveJ"
+  $ 11 "Waypoint_4" "breakAfter"
+  movej(get_inverse_kin(Waypoint_4_p, qnear=Waypoint_4_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 12 "MoveJ"
+  $ 13 "Waypoint_5" "breakAfter"
+  movej(get_inverse_kin(Waypoint_5_p, qnear=Waypoint_5_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 14 "MoveJ"
+  $ 15 "Waypoint_6" "breakAfter"
+  movej(get_inverse_kin(Waypoint_6_p, qnear=Waypoint_6_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 16 "MoveJ"
+  $ 17 "Waypoint_7" "breakAfter"
+  movej(get_inverse_kin(Waypoint_7_p, qnear=Waypoint_7_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 18 "MoveJ"
+  $ 19 "Waypoint_8" "breakAfter"
+  movej(get_inverse_kin(Waypoint_8_p, qnear=Waypoint_8_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 20 "Waypoint_9" "breakAfter"
+  movej(get_inverse_kin(Waypoint_9_p, qnear=Waypoint_9_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 21 "MoveJ"
+  $ 22 "Waypoint_10" "breakAfter"
+  movej(get_inverse_kin(Waypoint_10_p, qnear=Waypoint_10_q), a=1.3962634015954636, v=1.0471975511965976)
+  # begin: URCap Program Node
+  #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+  #   Type: RG6
+  $ 23 "RG6(121)"
+  RG6(121,120,0.0,True,False,False)
+  # end: URCap Program Node
+  $ 24 "MoveJ"
+  $ 25 "Waypoint_11" "breakAfter"
+  movej(get_inverse_kin(Waypoint_11_p, qnear=Waypoint_11_q), a=1.3962634015954636, v=1.0471975511965976)
+  # begin: URCap Program Node
+  #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+  #   Type: RG6
+  $ 26 "RG6(101)"
+  RG6(101,120,0.0,True,False,False)
+  # end: URCap Program Node
+  $ 27 "MoveJ"
+  $ 28 "Waypoint_13" "breakAfter"
+  movej(get_inverse_kin(Waypoint_13_p, qnear=Waypoint_13_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 29 "MoveJ"
+  $ 30 "Waypoint_12" "breakAfter"
+  movej(get_inverse_kin(Waypoint_12_p, qnear=Waypoint_12_q), a=1.3962634015954636, v=1.0471975511965976)
+  $ 31 "Waypoint_14" "breakAfter"
+  movej(get_inverse_kin(Waypoint_14_p, qnear=Waypoint_14_q), a=1.3962634015954636, v=1.0471975511965976)
+  # begin: URCap Program Node
+  #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+  #   Type: RG6
+  $ 32 "RG6(121)"
+  RG6(121,120,0.0,True,False,False)
+  # end: URCap Program Node
+  $ 33 "MoveJ"
+  $ 34 "Waypoint_15" "breakAfter"
+  movej(get_inverse_kin(Waypoint_15_p, qnear=Waypoint_15_q), a=1.3962634015954636, v=1.0471975511965976)
+end
