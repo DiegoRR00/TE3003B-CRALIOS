@@ -1,0 +1,16 @@
+ Program
+   Variables Setup
+   Robot Program
+     MoveJ
+       Waypoint_1
+     RG6(-3)
+     MoveL
+       Waypoint_2
+       Direction: Base Z-
+         Until (tool_contact_detection)
+           RG6(93)
+       Waypoint_3
+       RG6(50)
+       Waypoint_4
+       Waypoint_5
+       RG6(95)
